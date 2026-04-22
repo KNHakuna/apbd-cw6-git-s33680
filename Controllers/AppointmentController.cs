@@ -103,4 +103,35 @@ public class AppointmentsController : ControllerBase
             Message = result.Message
         });
     }
+    [HttpDelete("{idAppointment}")]
+    public async Task<IActionResult> DeleteAppointment(int idAppointment)
+    {
+        var result = await _service.DeleteAppointmentAsync(idAppointment);
+
+        if (!result.IsSuccess)
+        {
+            if (result.IsNotFound)
+            {
+                return NotFound(new ErrorResponseDto
+                {
+                    Message = result.Message
+                });
+            }
+
+            if (result.IsConflict)
+            {
+                return Conflict(new ErrorResponseDto
+                {
+                    Message = result.Message
+                });
+            }
+
+            return BadRequest(new ErrorResponseDto
+            {
+                Message = result.Message
+            });
+        }
+
+        return NoContent();
+    }
 }

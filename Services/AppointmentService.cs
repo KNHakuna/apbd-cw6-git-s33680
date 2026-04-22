@@ -482,4 +482,61 @@ public class AppointmentService
             Message = "Appointment updated successfully."
         };
     }
+    public async Task<OperationResultDto> DeleteAppointmentAsync(int idAppointment)
+    {
+        var connectionString = _config.GetConnectionString("DefaultConnection");
+
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        string appointmentStatus;
+
+        await using (var checkCommand = new SqlCommand(@"
+        SELECT Status
+        FROM dbo.Appointments
+        WHERE IdAppointment = @IdAppointment;
+    ", connection))
+        {
+            checkCommand.Parameters.Add("@IdAppointment", SqlDbType.Int).Value = idAppointment;
+
+            var result = await checkCommand.ExecuteScalarAsync();
+
+            if (result == null)
+            {
+                return new OperationResultDto
+                {
+                    IsSuccess = false,
+                    IsNotFound = true,
+                    Message = "Appointment not found."
+                };
+            }
+
+            appointmentStatus = result.ToString()!;
+        }
+
+        if (appointmentStatus == "Completed")
+        {
+            return new OperationResultDto
+            {
+                IsSuccess = false,
+                IsConflict = true,
+                Message = "Completed appointment cannot be deleted."
+            };
+        }
+
+        await using (var deleteCommand = new SqlCommand(@"
+        DELETE FROM dbo.Appointments
+        WHERE IdAppointment = @IdAppointment;
+    ", connection))
+        {
+            deleteCommand.Parameters.Add("@IdAppointment", SqlDbType.Int).Value = idAppointment;
+            await deleteCommand.ExecuteNonQueryAsync();
+        }
+
+        return new OperationResultDto
+        {
+            IsSuccess = true,
+            Message = "Appointment deleted successfully."
+        };
+    }
 }
