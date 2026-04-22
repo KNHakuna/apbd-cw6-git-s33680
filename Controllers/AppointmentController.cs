@@ -21,4 +21,20 @@ public class AppointmentsController : ControllerBase
         var data = await _service.GetAppointmentsAsync(status, patientLastName);
         return Ok(data);
     }
+
+    [HttpGet("{idAppointment}")]
+    public async Task<IActionResult> GetAppointmentById(int idAppointment)
+    {
+        var appointment = await _service.GetAppointmentByIdAsync(idAppointment);
+
+        if (appointment == null)
+        {
+            return NotFound(new ErrorResponseDto
+            {
+                Message = $"Appointment with id {idAppointment} was not found."
+            });
+        }
+
+        return Ok(appointment);
+    }
 }
