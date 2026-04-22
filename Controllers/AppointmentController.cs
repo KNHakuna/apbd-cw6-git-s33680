@@ -37,4 +37,35 @@ public class AppointmentsController : ControllerBase
 
         return Ok(appointment);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentRequestDto request)
+    {
+        var result = await _service.CreateAppointmentAsync(request);
+
+        if (!result.IsSuccess)
+        {
+            if (result.IsConflict)
+            {
+                return Conflict(new ErrorResponseDto
+                {
+                    Message = result.Message
+                });
+            }
+
+            return BadRequest(new ErrorResponseDto
+            {
+                Message = result.Message
+            });
+        }
+
+        return CreatedAtAction(
+            nameof(GetAppointmentById),
+            new { idAppointment = result.CreatedId },
+            new
+            {
+                IdAppointment = result.CreatedId,
+                Message = result.Message
+            });
+    }
 }
