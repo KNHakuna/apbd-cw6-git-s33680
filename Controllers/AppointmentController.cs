@@ -68,4 +68,39 @@ public class AppointmentsController : ControllerBase
                 Message = result.Message
             });
     }
+
+    [HttpPut("{idAppointment}")]
+    public async Task<IActionResult> UpdateAppointment(int idAppointment, [FromBody] UpdateAppointmentRequestDto request)
+    {
+        var result = await _service.UpdateAppointmentAsync(idAppointment, request);
+
+        if (!result.IsSuccess)
+        {
+            if (result.IsNotFound)
+            {
+                return NotFound(new ErrorResponseDto
+                {
+                    Message = result.Message
+                });
+            }
+
+            if (result.IsConflict)
+            {
+                return Conflict(new ErrorResponseDto
+                {
+                    Message = result.Message
+                });
+            }
+
+            return BadRequest(new ErrorResponseDto
+            {
+                Message = result.Message
+            });
+        }
+
+        return Ok(new
+        {
+            Message = result.Message
+        });
+    }
 }
